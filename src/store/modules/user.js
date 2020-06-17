@@ -31,9 +31,22 @@ const mutations = {
 const actions = {
   // user login
   login({ commit }, userInfo) {
-    const { username, password } = userInfo
+    console.log(userInfo);
+    var submitValue = {};
+    if (userInfo.loginType === 'email') {
+      submitValue = {
+        email: userInfo.email,
+        password: userInfo.password
+      };
+    } else {
+      submitValue = {
+        phone: userInfo.phone,
+        password: userInfo.password
+      };
+    }
+
     return new Promise((resolve, reject) => {
-      login({ username: username.trim(), password: password }).then(response => {
+      login(submitValue).then(response => {
         const { data } = response
         commit('SET_TOKEN', data.token)
         setToken(data.token)
@@ -48,17 +61,18 @@ const actions = {
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
       getInfo(state.token).then(response => {
-        const { data } = response
+        console.log(response.data)
+        const data = response.data
 
         if (!data) {
-          reject('Verification failed, please Login again.')
+          reject('获取失败，请重新登陆')
         }
 
         const { roles, name, avatar, introduction } = data
 
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
-          reject('getInfo: roles must be a non-null array!')
+          reject('用户没有权限访问')
         }
 
         commit('SET_ROLES', roles)
