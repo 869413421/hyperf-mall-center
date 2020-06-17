@@ -39,7 +39,7 @@ export function updateUser(id, data) {
   })
 }
 
-export function createUser( data) {
+export function createUser(data) {
   return request({
     url: `/center/admin`,
     method: 'post',
@@ -50,20 +50,20 @@ export function createUser( data) {
 export function deleteUser(id) {
   return request({
     url: `/center/admin/${id}`,
-    method: 'delete',
+    method: 'delete'
   })
 }
 
 export function changeStatus(id) {
   return request({
     url: `/center/admin/${id}/status`,
-    method: 'patch',
+    method: 'patch'
   })
 }
 
 export function resetPassword(id) {
   return request({
     url: `/center/admin/${id}/password`,
-    method: 'patch',
+    method: 'patch'
   })
 }

@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="filter-container">
       <el-input
-        v-model="listQuery.user_name"
+        v-model="listQuery.search"
         placeholder="名称"
         style="width: 200px;"
         class="filter-item"
@@ -10,29 +10,14 @@
       />
 
       <el-select
-        v-model="listQuery.role_id"
-        placeholder="选择角色"
+        v-model="listQuery.category_id"
+        placeholder="选择分类"
         clearable
         class="filter-item"
         style="width: 130px"
       >
         <el-option
           v-for="item in calendarTypeOptions"
-          :key="item.key"
-          :label="item.display_name"
-          :value="item.key"
-        />
-      </el-select>
-
-      <el-select
-        v-model="listQuery.status"
-        placeholder="用户状态"
-        clearable
-        class="filter-item"
-        style="width: 130px"
-      >
-        <el-option
-          v-for="item in statusTypeOptions"
           :key="item.key"
           :label="item.display_name"
           :value="item.key"
@@ -91,55 +76,31 @@
           <span>{{ row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="用户名称" width="110px" align="center">
+      <el-table-column label="商品名称" width="110px" align="center">
         <template slot-scope="{row}">
-          <span class="link-type" @click="handleUpdate(row)">{{ row.user_name }}</span>
+          <span class="link-type" @click="handleUpdate(row)">{{ row.title}}</span>
         </template>
       </el-table-column>
-      <el-table-column label="角色" width="110px" align="center">
+      <el-table-column label="分类名称" width="110px" align="center">
         <template slot-scope="{row}">
-          <el-tag v-for="role in row.roles" :key="role.id">{{ role.name }}</el-tag>
+         <span>{{ row.category.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="头像" width="150px" align="center">
+      <el-table-column label="商品图" width="150px" align="center">
         <template slot-scope="{row}">
-          <img :src="row.avatar" style="width:50px;height:50px">
+          <img :src="row.image" style="width:50px;height:50px" />
         </template>
       </el-table-column>
-      <el-table-column label="创建日期" width="150px" align="center">
+      <el-table-column label="价格" width="150px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.created_at | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
+          <span>{{ row.price }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="最后活跃时间" width="150px" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.last_login_at | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="邮箱" width="150px" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.email }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="电话" width="150px" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.phone }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="真实姓名" width="150px" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.real_name }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="性别" width="150px" align="center">
-        <template slot-scope="{row}">
-          <el-tag>{{ row.sex | sexFilter }}</el-tag>
-        </template>
-      </el-table-column>
+    
       <el-table-column label="状态" width="150px" align="center">
         <template slot-scope="{row}">
-          <el-tag v-if="row.status===0">{{ row.status|statusFilter }}</el-tag>
-          <el-tag v-else type="danger">{{ row.status|statusFilter }}</el-tag>
+          <el-tag v-if="row.on_sale">上架</el-tag>
+          <el-tag v-else type="danger">未上架</el-tag>
         </template>
       </el-table-column>
 
@@ -202,22 +163,20 @@
             @crop-upload-success="cropSuccess"
           />
         </el-form-item>
-        <el-form-item label="用户名称" prop="user_name">
-          <el-input v-model="temp.user_name" />
+        <el-form-item label="商品名称" prop="title">
+          <el-input v-model="temp.title" />
         </el-form-item>
-        <el-form-item v-if="dialogStatus==='create'" label="用户密码" prop="password">
-          <el-input v-model="temp.password" />
+        <el-form-item label="商品长标题" prop="long_title">
+          <el-input v-model="temp.title" />
         </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="temp.email" />
+        <el-form-item label="商品简介" prop="description">
+          <el-input v-model="temp.description" />
         </el-form-item>
-        <el-form-item label="电话号码" prop="phone">
-          <el-input v-model="temp.phone" />
+        <el-form-item label="价格" prop="price">
+          <el-input v-model="temp.price" />
         </el-form-item>
-        <el-form-item label="真实姓名" prop="real_name">
-          <el-input v-model="temp.real_name" />
-        </el-form-item>
-        <el-form-item label="请选择角色" prop="role_id">
+
+        <!-- <el-form-item label="请选择角色" prop="role_id">
           <el-select
             v-model="temp.role_id"
             placeholder="选择角色"
@@ -237,7 +196,7 @@
         <el-form-item label="性别" prop="sex">
           <el-radio v-model="temp.sex" :label="0">男</el-radio>
           <el-radio v-model="temp.sex" :label="1">女</el-radio>
-        </el-form-item>
+        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
@@ -248,50 +207,35 @@
 </template>
 
 <script>
-import ImageCropper from '@/components/ImageCropper';
-import PanThumb from '@/components/PanThumb';
+import ImageCropper from "@/components/ImageCropper";
+import PanThumb from "@/components/PanThumb";
 import {
-  getUserList,
-  updateUser,
-  createUser,
-  deleteUser,
-  changeStatus,
-  resetPassword
-} from '@/api/user';
-import waves from '@/directive/waves'; // waves directive
-import { parseTime } from '@/utils';
-import Pagination from '@/components/Pagination'; // secondary package based on el-pagination
-import { string } from 'jszip/lib/support';
+  getProductList,
+  updateProduct,
+  createProduct,
+  deleteProduct
+} from "@/api/product";
+import waves from "@/directive/waves"; // waves directive
+import { parseTime } from "@/utils";
+import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
+import { string } from "jszip/lib/support";
 
 const calendarTypeOptions = [];
-const statusTypeOptions = [
-  {
-    key: 0,
-    display_name: '正常'
-  },
-  {
-    key: 1,
-    display_name: '禁用'
-  }
-];
+
 const sexTypeOptions = [
-  { key: 0, display_name: '男' },
-  { key: 1, display_name: '女' }
+  { key: 0, display_name: "男" },
+  { key: 1, display_name: "女" }
 ];
 
-const sexTypeKeyValue = sexTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name;
-  return acc;
-}, {});
 export default {
-  name: 'User',
+  name: "Product",
   components: { Pagination, ImageCropper, PanThumb },
   directives: { waves },
   filters: {
     statusFilter(status) {
       const statusMap = {
-        0: '正常',
-        1: '禁用'
+        0: "正常",
+        1: "禁用"
       };
       return statusMap[status];
     },
@@ -310,48 +254,46 @@ export default {
       listQuery: {
         page: 1,
         pageSize: 20,
-        role_id: undefined,
-        sort: '',
-        status: ''
+        category_id: "",
+        sort: "",
+        search: ""
       },
       calendarTypeOptions,
-      statusTypeOptions,
       sortOptions: [
-        { label: 'ID升序', key: 'ASC' },
-        { label: 'ID降序', key: 'DESC' }
+        { label: "ID升序", key: "ASC" },
+        { label: "ID降序", key: "DESC" }
       ],
       temp: {
         id: undefined,
-        user_name: 1,
-        password: '',
-        email: '',
-        phone: '',
-        real_name: '',
-        avatar: '',
-        sex: 0,
-        role_id: undefined,
-        roles: []
+        category_id: 1,
+        description: "",
+        image: "",
+        title:"",
+        long_title: "",
+        on_sale: "",
+        price: 0,
+        type:""
       },
       dialogFormVisible: false,
-      dialogStatus: '',
+      dialogStatus: "",
       textMap: {
-        update: '编辑',
-        create: '新建'
+        update: "编辑",
+        create: "新建"
       },
       dialogPvVisible: false,
       rules: {
         user_name: [
-          { required: true, message: '请填写用户名称', trigger: 'change' }
+          { required: true, message: "请填写用户名称", trigger: "change" }
         ],
         password: [
-          { required: true, message: '请填写用户密码', trigger: 'change' }
+          { required: true, message: "请填写用户密码", trigger: "change" }
         ],
-        email: [{ required: true, message: '请填写email', trigger: 'change' }],
+        email: [{ required: true, message: "请填写email", trigger: "change" }],
         sex: [
           {
             required: true,
-            message: '请选择性别',
-            trigger: 'click'
+            message: "请选择性别",
+            trigger: "click"
           }
         ]
       }
@@ -371,22 +313,17 @@ export default {
     },
     getList() {
       this.listLoading = true;
-      getUserList(this.listQuery).then(response => {
+      getProductList(this.listQuery).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
         if (calendarTypeOptions.length <= 0) {
-          response.data.roles.forEach(item => {
+          response.data.category.forEach(item => {
             calendarTypeOptions.push({
               key: item.id,
               display_name: item.name
             });
           });
-          calendarTypeOptions.unshift({
-            key: '',
-            display_name: ''
-          });
         }
-
         setTimeout(() => {
           this.listLoading = false;
         }, 1.5 * 1000);
@@ -398,27 +335,27 @@ export default {
     },
     sortChange(data) {
       const { prop, order } = data;
-      if (prop === 'id') {
+      if (prop === "id") {
         this.sortByID(order);
       }
     },
     sortByID(order) {
-      if (order === 'ascending') {
-        this.listQuery.sort = '+id';
+      if (order === "ascending") {
+        this.listQuery.sort = "+id";
       } else {
-        this.listQuery.sort = '-id';
+        this.listQuery.sort = "-id";
       }
       this.handleFilter();
     },
     resetTemp() {
       this.temp = {
         id: undefined,
-        user_name: '',
-        password: '',
-        email: '',
-        phone: '',
-        real_name: '',
-        avatar: '',
+        user_name: "",
+        password: "",
+        email: "",
+        phone: "",
+        real_name: "",
+        avatar: "",
         sex: 0,
         roles: [],
         role_id: undefined
@@ -426,23 +363,23 @@ export default {
     },
     handleCreate() {
       this.resetTemp();
-      this.dialogStatus = 'create';
+      this.dialogStatus = "create";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate();
+        this.$refs["dataForm"].clearValidate();
       });
     },
     createData() {
-      this.$refs['dataForm'].validate(valid => {
+      this.$refs["dataForm"].validate(valid => {
         if (valid) {
           createUser(this.temp).then(res => {
             this.temp = res.data;
             this.list.unshift(this.temp);
             this.dialogFormVisible = false;
             this.$notify({
-              title: 'Success',
-              message: '新增成功',
-              type: 'success',
+              title: "Success",
+              message: "新增成功",
+              type: "success",
               duration: 2000
             });
           });
@@ -453,14 +390,14 @@ export default {
       var role_id = row.roles.length > 0 ? row.roles[0].id : 0;
       this.temp = Object.assign({ role_id: role_id }, row); // copy obj
       console.log(this.temp);
-      this.dialogStatus = 'update';
+      this.dialogStatus = "update";
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate();
+        this.$refs["dataForm"].clearValidate();
       });
     },
     updateData() {
-      this.$refs['dataForm'].validate(valid => {
+      this.$refs["dataForm"].validate(valid => {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
 
@@ -469,9 +406,9 @@ export default {
             this.list.splice(index, 1, res.data);
             this.dialogFormVisible = false;
             this.$notify({
-              title: 'Success',
-              message: '更新成功',
-              type: 'success',
+              title: "Success",
+              message: "更新成功",
+              type: "success",
               duration: 2000
             });
           });
@@ -483,9 +420,9 @@ export default {
         this.list.splice(index, 1);
         this.total = this.total - 1;
         this.$notify({
-          title: 'Success',
-          message: '删除成功',
-          type: 'success',
+          title: "Success",
+          message: "删除成功",
+          type: "success",
           duration: 2000
         });
       });
@@ -495,9 +432,9 @@ export default {
         row.status = row.status == 0 ? 1 : 0;
         this.list.splice(index, 1, row);
         this.$notify({
-          title: 'Success',
-          message: '修改成功',
-          type: 'success',
+          title: "Success",
+          message: "修改成功",
+          type: "success",
           duration: 2000
         });
       });
@@ -505,16 +442,16 @@ export default {
     handleResetPassword(row) {
       resetPassword(row.id).then(res => {
         this.$notify({
-          title: 'Success',
-          message: '新密码为：' + res.data.password,
-          type: 'success',
+          title: "Success",
+          message: "新密码为：" + res.data.password,
+          type: "success",
           duration: 10000
         });
       });
     },
     getSortClass: function(key) {
       const sort = this.listQuery.sort;
-      return sort === `+${key}` ? 'ascending' : 'descending';
+      return sort === `+${key}` ? "ascending" : "descending";
     }
   }
 };

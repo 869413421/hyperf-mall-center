@@ -183,6 +183,18 @@ export const asyncRoutes = [
     ]
   },
   {
+    path: '/product',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/product/product'),
+        name: '商品管理',
+        meta: { title: '商品管理', icon: 'shopping', noCache: true }
+      }
+    ]
+  },
+  {
     path: '/icon',
     component: Layout,
     children: [

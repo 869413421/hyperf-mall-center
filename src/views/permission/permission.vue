@@ -185,33 +185,33 @@ import {
   updatePermission,
   createPermission,
   deletePermission
-} from "@/api/permission";
-import waves from "@/directive/waves"; // waves directive
-import { parseTime } from "@/utils";
-import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
+} from '@/api/permission';
+import waves from '@/directive/waves'; // waves directive
+import { parseTime } from '@/utils';
+import Pagination from '@/components/Pagination'; // secondary package based on el-pagination
 
 const calendarTypeOptions = [];
 const permissionTypeOptions = [
   {
-    type: "web",
-    display_name: "前台权限"
+    type: 'web',
+    display_name: '前台权限'
   },
   {
-    type: "admin",
-    display_name: "后台权限"
+    type: 'admin',
+    display_name: '后台权限'
   }
 ];
 
 export default {
-  name: "Permission",
+  name: 'Permission',
   components: { Pagination },
   directives: { waves },
   filters: {
     statusFilter(status) {
       const statusMap = {
-        published: "success",
-        draft: "info",
-        deleted: "danger"
+        published: 'success',
+        draft: 'info',
+        deleted: 'danger'
       };
       return statusMap[status];
     }
@@ -225,51 +225,51 @@ export default {
       listQuery: {
         page: 1,
         pageSize: 20,
-        name: "",
-        parent_id: "",
-        sort: ""
+        name: '',
+        parent_id: '',
+        sort: ''
       },
 
       calendarTypeOptions,
       permissionTypeOptions,
       sortOptions: [
-        { label: "ASC", key: "ASC" },
-        { label: "DESC", key: "DESC" }
+        { label: 'ASC', key: 'ASC' },
+        { label: 'DESC', key: 'DESC' }
       ],
       temp: {
         id: undefined,
-        name: "",
-        display_name: "",
-        guard_name: "",
-        url: "",
-        parent_id: ""
+        name: '',
+        display_name: '',
+        guard_name: '',
+        url: '',
+        parent_id: ''
       },
       dialogFormVisible: false,
-      dialogStatus: "",
+      dialogStatus: '',
       textMap: {
-        update: "编辑",
-        create: "新建"
+        update: '编辑',
+        create: '新建'
       },
       dialogPvVisible: false,
       pvData: [],
       rules: {
-        name: [{ required: true, message: "请填写名称", trigger: "change" }],
+        name: [{ required: true, message: '请填写名称', trigger: 'change' }],
         display_name: [
-          { required: true, message: "请填写显示名称", trigger: "change" }
+          { required: true, message: '请填写显示名称', trigger: 'change' }
         ],
-        url: [{ required: true, message: "请填写路由", trigger: "change" }],
+        url: [{ required: true, message: '请填写路由', trigger: 'change' }],
         guard_name: [
           {
             required: true,
-            message: "请选择权限类别",
-            trigger: "click"
+            message: '请选择权限类别',
+            trigger: 'click'
           }
         ],
         sort: [
           {
             required: true,
-            message: "请填写路由",
-            trigger: "change"
+            message: '请填写路由',
+            trigger: 'change'
           }
         ]
       }
@@ -294,11 +294,11 @@ export default {
           });
           calendarTypeOptions.unshift({
             key: 0,
-            display_name: "1级权限"
+            display_name: '1级权限'
           });
           calendarTypeOptions.unshift({
-            key: "",
-            display_name: ""
+            key: '',
+            display_name: ''
           });
         }
 
@@ -313,48 +313,48 @@ export default {
     },
     sortChange(data) {
       const { prop, order } = data;
-      if (prop === "id") {
+      if (prop === 'id') {
         this.sortByID(order);
       }
     },
     sortByID(order) {
-      if (order === "ascending") {
-        this.listQuery.sort = "+id";
+      if (order === 'ascending') {
+        this.listQuery.sort = '+id';
       } else {
-        this.listQuery.sort = "-id";
+        this.listQuery.sort = '-id';
       }
       this.handleFilter();
     },
     resetTemp() {
       this.temp = {
         id: undefined,
-        name: "",
-        display_name: "",
-        url: "",
+        name: '',
+        display_name: '',
+        url: '',
         sort: 0,
-        parent_id: "",
-        guard_name: "admin"
+        parent_id: '',
+        guard_name: 'admin'
       };
     },
     handleCreate() {
       this.resetTemp();
-      this.dialogStatus = "create";
+      this.dialogStatus = 'create';
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate();
+        this.$refs['dataForm'].clearValidate();
       });
     },
     createData() {
-      this.$refs["dataForm"].validate(valid => {
+      this.$refs['dataForm'].validate(valid => {
         if (valid) {
           createPermission(this.temp).then(res => {
             this.temp.id = res.data.id;
             this.list.unshift(this.temp);
             this.dialogFormVisible = false;
             this.$notify({
-              title: "Success",
-              message: "新增成功",
-              type: "success",
+              title: 'Success',
+              message: '新增成功',
+              type: 'success',
               duration: 2000
             });
           });
@@ -363,14 +363,14 @@ export default {
     },
     handleUpdate(row) {
       this.temp = Object.assign({}, row); // copy obj
-      this.dialogStatus = "update";
+      this.dialogStatus = 'update';
       this.dialogFormVisible = true;
       this.$nextTick(() => {
-        this.$refs["dataForm"].clearValidate();
+        this.$refs['dataForm'].clearValidate();
       });
     },
     updateData() {
-      this.$refs["dataForm"].validate(valid => {
+      this.$refs['dataForm'].validate(valid => {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
 
@@ -379,9 +379,9 @@ export default {
             this.list.splice(index, 1, this.temp);
             this.dialogFormVisible = false;
             this.$notify({
-              title: "Success",
-              message: "更新成功",
-              type: "success",
+              title: 'Success',
+              message: '更新成功',
+              type: 'success',
               duration: 2000
             });
           });
@@ -393,16 +393,16 @@ export default {
         this.list.splice(index, 1);
         this.total = this.total - 1;
         this.$notify({
-          title: "Success",
-          message: "删除成功",
-          type: "success",
+          title: 'Success',
+          message: '删除成功',
+          type: 'success',
           duration: 2000
         });
       });
     },
     getSortClass: function(key) {
       const sort = this.listQuery.sort;
-      return sort === `+${key}` ? "ascending" : "descending";
+      return sort === `+${key}` ? 'ascending' : 'descending';
     }
   }
 };
