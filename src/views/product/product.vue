@@ -25,7 +25,21 @@
       </el-select>
 
       <el-select
-        v-model="listQuery.sort"
+        v-model="listQuery.field"
+        style="width: 140px"
+        class="filter-item"
+        placeholder="选择排序字段"
+      >
+        <el-option
+          v-for="item in filedOptions"
+          :key="item.key"
+          :label="item.label"
+          :value="item.key"
+        />
+      </el-select>
+
+      <el-select
+        v-model="listQuery.order"
         style="width: 140px"
         class="filter-item"
         placeholder="选择排序方式"
@@ -62,7 +76,6 @@
       fit
       highlight-current-row
       style="width: 100%;"
-      @sort-change="sortChange"
     >
       <el-table-column
         label="ID"
@@ -83,7 +96,7 @@
       </el-table-column>
       <el-table-column label="分类名称" width="110px" align="center">
         <template slot-scope="{row}">
-         <span>{{ row.category.name }}</span>
+          <span>{{ row.category.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="商品图" width="150px" align="center">
@@ -96,7 +109,22 @@
           <span>{{ row.price }}</span>
         </template>
       </el-table-column>
-    
+      <el-table-column label="查看人数" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.review_count }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="评分" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.rating }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="销量" width="150px" align="center">
+        <template slot-scope="{row}">
+          <span>{{ row.sold_count }}</span>
+        </template>
+      </el-table-column>
+
       <el-table-column label="状态" width="150px" align="center">
         <template slot-scope="{row}">
           <el-tag v-if="row.on_sale">上架</el-tag>
@@ -255,24 +283,31 @@ export default {
         page: 1,
         pageSize: 20,
         category_id: "",
-        sort: "",
+        order: "",
+        field: "",
         search: ""
       },
       calendarTypeOptions,
       sortOptions: [
-        { label: "ID升序", key: "ASC" },
-        { label: "ID降序", key: "DESC" }
+        { label: "升序", key: "asc" },
+        { label: "降序", key: "desc" }
+      ],
+      filedOptions: [
+        { label: "销量", key: "sold_count" },
+        { label: "评分", key: "rating" },
+        { label: "查看人数", key: "review_count" },
+        { label: "价格", key: "price" }
       ],
       temp: {
         id: undefined,
         category_id: 1,
         description: "",
         image: "",
-        title:"",
+        title: "",
         long_title: "",
         on_sale: "",
         price: 0,
-        type:""
+        type: ""
       },
       dialogFormVisible: false,
       dialogStatus: "",
@@ -332,20 +367,6 @@ export default {
     handleFilter() {
       this.listQuery.page = 1;
       this.getList();
-    },
-    sortChange(data) {
-      const { prop, order } = data;
-      if (prop === "id") {
-        this.sortByID(order);
-      }
-    },
-    sortByID(order) {
-      if (order === "ascending") {
-        this.listQuery.sort = "+id";
-      } else {
-        this.listQuery.sort = "-id";
-      }
-      this.handleFilter();
     },
     resetTemp() {
       this.temp = {
