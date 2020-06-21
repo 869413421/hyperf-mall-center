@@ -65,7 +65,7 @@
         type="primary"
         icon="el-icon-edit"
         @click="handleCreate"
-      >新增用户</el-button>
+      >添加商品</el-button>
     </div>
 
     <el-table
@@ -136,19 +136,6 @@
         <template slot-scope="{row,$index}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
           <el-button size="mini" type="danger" @click="handleDelete(row,$index)">删除</el-button>
-          <el-button
-            v-if="row.status==0"
-            size="mini"
-            type="danger"
-            @click="handleChangeStatus(row,$index)"
-          >禁用</el-button>
-          <el-button
-            v-if="row.status==1"
-            type="primary"
-            size="mini"
-            @click="handleChangeStatus(row,$index)"
-          >启用</el-button>
-          <el-button type="primary" size="mini" @click="handleResetPassword(row)">重置密码</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -170,15 +157,15 @@
         label-width="70px"
         style="width: 400px; margin-left:50px;"
       >
-        <el-form-item label="用户头像" prop="avatar">
-          <pan-thumb :image="temp.avatar" />
+        <el-form-item label="商品图片" prop="image">
+          <pan-thumb :image="temp.image" />
 
           <el-button
             type="primary"
             icon="el-icon-upload"
             style="position: absolute;bottom: 15px;margin-left: 40px;"
             @click="imagecropperShow=true"
-          >上传头像</el-button>
+          >上传图片</el-button>
 
           <image-cropper
             v-show="imagecropperShow"
@@ -195,19 +182,19 @@
           <el-input v-model="temp.title" />
         </el-form-item>
         <el-form-item label="商品长标题" prop="long_title">
-          <el-input v-model="temp.title" />
+          <el-input v-model="temp.long_title" type="textarea" rows="5" />
         </el-form-item>
         <el-form-item label="商品简介" prop="description">
-          <el-input v-model="temp.description" />
+          <el-input v-model="temp.description" type="textarea" rows="5" />
         </el-form-item>
         <el-form-item label="价格" prop="price">
           <el-input v-model="temp.price" />
         </el-form-item>
 
-        <!-- <el-form-item label="请选择角色" prop="role_id">
+        <el-form-item label="分类" prop="price">
           <el-select
-            v-model="temp.role_id"
-            placeholder="选择角色"
+            v-model="temp.category_id"
+            placeholder="选择分类"
             clearable
             class="filter-item"
             style="width: 130px"
@@ -221,10 +208,28 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="性别" prop="sex">
-          <el-radio v-model="temp.sex" :label="0">男</el-radio>
-          <el-radio v-model="temp.sex" :label="1">女</el-radio>
-        </el-form-item>-->
+        <el-form-item label="上架" prop="on_sale">
+          <el-radio v-model="temp.on_sale" :label="true">上架</el-radio>
+          <el-radio v-model="temp.on_sale" :label="false">未上架</el-radio>
+        </el-form-item>
+
+        <el-button size="mini" @click="addSku()">增加sku</el-button>
+
+        <el-form-item label="sku" prop="skus" v-for="(item,index) in temp.skus" :key="item.id">
+          <el-form-item label="sku名称" prop="title">
+            <el-input v-model="item.title" />
+          </el-form-item>
+          <el-form-item label="商品简介" prop="description">
+            <el-input v-model="item.description" type="textarea" rows="5" />
+          </el-form-item>
+          <el-form-item label="价格" prop="price">
+            <el-input v-model="item.price" />
+          </el-form-item>
+          <el-form-item label="库存" prop="stock">
+            <el-input v-model="item.stock" />
+          </el-form-item>
+          <el-button size="mini" type="danger" @click="removeSku(index)">移除</el-button>
+        </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取消</el-button>
@@ -243,17 +248,13 @@ import {
   createProduct,
   deleteProduct
 } from "@/api/product";
+import { getCategoryList } from "@/api/category";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
 import { string } from "jszip/lib/support";
 
 const calendarTypeOptions = [];
-
-const sexTypeOptions = [
-  { key: 0, display_name: "男" },
-  { key: 1, display_name: "女" }
-];
 
 export default {
   name: "Product",
@@ -307,7 +308,8 @@ export default {
         long_title: "",
         on_sale: "",
         price: 0,
-        type: ""
+        type: "",
+        skus: []
       },
       dialogFormVisible: false,
       dialogStatus: "",
@@ -317,17 +319,15 @@ export default {
       },
       dialogPvVisible: false,
       rules: {
-        user_name: [
-          { required: true, message: "请填写用户名称", trigger: "change" }
+        title: [{ required: true, message: "请填写标题", trigger: "change" }],
+        price: [{ required: true, message: "请填写价格", trigger: "change" }],
+        descriptin_saleon: [
+          { required: true, message: "请填写简介", trigger: "change" }
         ],
-        password: [
-          { required: true, message: "请填写用户密码", trigger: "change" }
-        ],
-        email: [{ required: true, message: "请填写email", trigger: "change" }],
-        sex: [
+        on_sale: [
           {
             required: true,
-            message: "请选择性别",
+            message: "请选择上架",
             trigger: "click"
           }
         ]
@@ -336,29 +336,35 @@ export default {
   },
   created() {
     this.getList();
+    this.getCategory();
   },
   methods: {
     cropSuccess(resData) {
       this.imagecropperShow = false;
       this.imagecropperKey = this.imagecropperKey + 1;
-      this.temp.avatar = resData.path;
+      this.temp.image = resData.path;
     },
     close() {
       this.imagecropperShow = false;
+    },
+    getCategory() {
+      var query = {
+        pageSize: 100
+      };
+      getCategoryList(query).then(response => {
+        response.data.list.forEach(item => {
+          calendarTypeOptions.push({
+            key: item.id,
+            display_name: item.name
+          });
+        });
+      });
     },
     getList() {
       this.listLoading = true;
       getProductList(this.listQuery).then(response => {
         this.list = response.data.list;
         this.total = response.data.total;
-        if (calendarTypeOptions.length <= 0) {
-          response.data.category.forEach(item => {
-            calendarTypeOptions.push({
-              key: item.id,
-              display_name: item.name
-            });
-          });
-        }
         setTimeout(() => {
           this.listLoading = false;
         }, 1.5 * 1000);
@@ -371,15 +377,15 @@ export default {
     resetTemp() {
       this.temp = {
         id: undefined,
-        user_name: "",
-        password: "",
-        email: "",
-        phone: "",
-        real_name: "",
-        avatar: "",
-        sex: 0,
-        roles: [],
-        role_id: undefined
+        category_id: "",
+        description: "",
+        image: "",
+        title: "",
+        long_title: "",
+        on_sale: "",
+        price: 0,
+        type: "",
+        skus: []
       };
     },
     handleCreate() {
@@ -393,9 +399,11 @@ export default {
     createData() {
       this.$refs["dataForm"].validate(valid => {
         if (valid) {
-          createUser(this.temp).then(res => {
-            this.temp = res.data;
-            this.list.unshift(this.temp);
+          var items = this.temp.skus;
+          const tempData = Object.assign({ items: items }, this.temp);
+          createProduct(tempData).then(res => {
+            console.log(res.data);
+            this.list.unshift(res.data);
             this.dialogFormVisible = false;
             this.$notify({
               title: "Success",
@@ -408,8 +416,7 @@ export default {
       });
     },
     handleUpdate(row) {
-      var role_id = row.roles.length > 0 ? row.roles[0].id : 0;
-      this.temp = Object.assign({ role_id: role_id }, row); // copy obj
+      this.temp = Object.assign({}, row); // copy obj
       console.log(this.temp);
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
@@ -422,9 +429,9 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
 
-          updateUser(this.temp.id, tempData).then(res => {
+          updateProduct(this.temp.id, tempData).then(res => {
             const index = this.list.findIndex(v => v.id === this.temp.id);
-            this.list.splice(index, 1, res.data);
+            this.list.splice(index, 1, tempData);
             this.dialogFormVisible = false;
             this.$notify({
               title: "Success",
@@ -437,7 +444,7 @@ export default {
       });
     },
     handleDelete(row, index) {
-      deleteUser(row.id).then(() => {
+      deleteProduct(row.id).then(() => {
         this.list.splice(index, 1);
         this.total = this.total - 1;
         this.$notify({
@@ -448,31 +455,20 @@ export default {
         });
       });
     },
-    handleChangeStatus(row, index) {
-      changeStatus(row.id).then(() => {
-        row.status = row.status == 0 ? 1 : 0;
-        this.list.splice(index, 1, row);
-        this.$notify({
-          title: "Success",
-          message: "修改成功",
-          type: "success",
-          duration: 2000
-        });
-      });
-    },
-    handleResetPassword(row) {
-      resetPassword(row.id).then(res => {
-        this.$notify({
-          title: "Success",
-          message: "新密码为：" + res.data.password,
-          type: "success",
-          duration: 10000
-        });
-      });
-    },
     getSortClass: function(key) {
       const sort = this.listQuery.sort;
       return sort === `+${key}` ? "ascending" : "descending";
+    },
+    removeSku(index) {
+      this.temp.skus.splice(index, 1);
+    },
+    addSku() {
+      this.temp.skus.unshift({
+        title: "",
+        price: 0,
+        description: "",
+        stock: 0
+      });
     }
   }
 };

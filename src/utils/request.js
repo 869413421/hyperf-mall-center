@@ -52,8 +52,6 @@ service.interceptors.response.use(
       204,
       302
     ];
-    console.log(1111);
-    console.log(response)
     if (successCode.indexOf(res.code) < 0) {
       Message({
         message: res.message || 'Error',
