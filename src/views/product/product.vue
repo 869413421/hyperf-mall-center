@@ -116,7 +116,7 @@
       </el-table-column>
       <el-table-column label="分类名称" width="110px" align="center">
         <template slot-scope="{row}">
-          <span>{{ row.category.name }}</span>
+          <span v-html="row.category?row.category.name:''"></span>
         </template>
       </el-table-column>
       <el-table-column label="商品图" width="150px" align="center">
@@ -184,6 +184,7 @@
             clearable
             class="filter-item"
             style="width: 130px"
+            :disabled="dialogStatus==='update'"
           >
             <el-option
               v-for="item in prodcutTypeOptions"
@@ -192,6 +193,37 @@
               :value="item.key"
             />
           </el-select>
+        </el-form-item>
+
+        <el-form-item label="众筹金额" v-if="temp.type==='crowdfunding'" prop="target_amount">
+          <el-input v-model="temp.target_amount" />
+        </el-form-item>
+
+        <el-form-item label="众筹结束时间" v-if="temp.type==='crowdfunding'" prop="end_time">
+          <el-date-picker
+            v-model="temp.end_time"
+            type="datetime"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            placeholder="选择日期时间"
+          ></el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="秒杀开始时间" v-if="temp.type==='seckill'" prop="start_at">
+          <el-date-picker
+            v-model="temp.start_at"
+            type="datetime"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            placeholder="选择日期时间"
+          ></el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="秒杀结束时间" v-if="temp.type==='seckill'" prop="end_at">
+          <el-date-picker
+            v-model="temp.end_at"
+            type="datetime"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            placeholder="选择日期时间"
+          ></el-date-picker>
         </el-form-item>
 
         <el-form-item label="商品图片" prop="image">
@@ -286,6 +318,8 @@ import {
   deleteProduct
 } from "@/api/product";
 import { getCategoryList } from "@/api/category";
+import { createCrowdfunding, updateCrowdfunding } from "@/api/crowdfunding";
+import { createSeckill, updateSeckill } from "@/api/seckill";
 import waves from "@/directive/waves"; // waves directive
 import { parseTime } from "@/utils";
 import Pagination from "@/components/Pagination"; // secondary package based on el-pagination
@@ -350,7 +384,11 @@ export default {
         type: "",
         skus: [],
         seckill: null,
-        crowdfunding: null
+        crowdfunding: null,
+        target_amount: 0,
+        end_time: "",
+        start_at: "",
+        end_at: ""
       },
       dialogFormVisible: false,
       dialogStatus: "",
@@ -423,12 +461,16 @@ export default {
         image: "",
         title: "",
         long_title: "",
+        start_at: "",
+        end_at: "",
         on_sale: "",
         price: 0,
         skus: [],
         type: "normal",
         seckill: null,
-        crowdfunding: null
+        crowdfunding: null,
+        target_amount: 0,
+        end_time: ""
       };
     },
     handleCreate() {
@@ -444,22 +486,63 @@ export default {
         if (valid) {
           var items = this.temp.skus;
           const tempData = Object.assign({ items: items }, this.temp);
-          createProduct(tempData).then(res => {
-            console.log(res.data);
-            this.list.unshift(res.data);
-            this.dialogFormVisible = false;
-            this.$notify({
-              title: "Success",
-              message: "新增成功",
-              type: "success",
-              duration: 2000
+          if (this.temp.type === "crowdfunding") {
+            createCrowdfunding(tempData).then(res => {
+              console.log(res.data);
+              this.list.unshift(res.data);
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "Success",
+                message: "新增成功",
+                type: "success",
+                duration: 2000
+              });
             });
-          });
+          } else if (this.temp.type === "seckill") {
+            createSeckill(tempData).then(res => {
+              console.log(res.data);
+              this.list.unshift(res.data);
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "Success",
+                message: "新增成功",
+                type: "success",
+                duration: 2000
+              });
+            });
+          } else {
+            createProduct(tempData).then(res => {
+              console.log(res.data);
+              this.list.unshift(res.data);
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "Success",
+                message: "新增成功",
+                type: "success",
+                duration: 2000
+              });
+            });
+          }
         }
       });
     },
     handleUpdate(row) {
-      this.temp = Object.assign({}, row); // copy obj
+       var items = row.skus;
+      if (row.type === "crowdfunding") {
+        var target_amount = row.crowdfunding.target_amount;
+        var end_time = row.crowdfunding.end_time;
+        this.temp = Object.assign(
+          { target_amount: target_amount, end_time: end_time,items:items },
+          row
+        ); // copy obj
+      } else if (row.type === "seckill") {
+        var start_at = row.seckill.start_at;
+        var end_at = row.seckill.end_at;
+        this.temp = Object.assign({ start_at: start_at, end_at: end_at,items:items }, row); // copy obj
+      } else {
+        this.temp = Object.assign({items:items}, row); // copy obj
+      }
+
       console.log(this.temp);
       this.dialogStatus = "update";
       this.dialogFormVisible = true;
@@ -472,17 +555,43 @@ export default {
         if (valid) {
           const tempData = Object.assign({}, this.temp);
 
-          updateProduct(this.temp.id, tempData).then(res => {
-            const index = this.list.findIndex(v => v.id === this.temp.id);
-            this.list.splice(index, 1, tempData);
-            this.dialogFormVisible = false;
-            this.$notify({
-              title: "Success",
-              message: "更新成功",
-              type: "success",
-              duration: 2000
+          if (tempData.type === "crowdfunding") {
+            updateCrowdfunding(this.temp.id, tempData).then(res => {
+              const index = this.list.findIndex(v => v.id === this.temp.id);
+              this.list.splice(index, 1, tempData);
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "Success",
+                message: "更新成功",
+                type: "success",
+                duration: 2000
+              });
             });
-          });
+          } else if (tempData.type === "seckill") {
+            updateSeckill(this.temp.id, tempData).then(res => {
+              const index = this.list.findIndex(v => v.id === this.temp.id);
+              this.list.splice(index, 1, tempData);
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "Success",
+                message: "更新成功",
+                type: "success",
+                duration: 2000
+              });
+            });
+          } else {
+            updateProduct(this.temp.id, tempData).then(res => {
+              const index = this.list.findIndex(v => v.id === this.temp.id);
+              this.list.splice(index, 1, tempData);
+              this.dialogFormVisible = false;
+              this.$notify({
+                title: "Success",
+                message: "更新成功",
+                type: "success",
+                duration: 2000
+              });
+            });
+          }
         }
       });
     },
