@@ -25,6 +25,21 @@
       </el-select>
 
       <el-select
+        v-model="listQuery.type"
+        placeholder="选择商品类型"
+        clearable
+        class="filter-item"
+        style="width: 130px"
+      >
+        <el-option
+          v-for="item in prodcutTypeOptions"
+          :key="item.key"
+          :label="item.label"
+          :value="item.key"
+        />
+      </el-select>
+
+      <el-select
         v-model="listQuery.field"
         style="width: 140px"
         class="filter-item"
@@ -94,6 +109,11 @@
           <span class="link-type" @click="handleUpdate(row)">{{ row.title}}</span>
         </template>
       </el-table-column>
+      <el-table-column label="商品类型" width="150px" align="center">
+        <template slot-scope="{row}">
+          <el-tag>{{ row.type | typeFilter }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="分类名称" width="110px" align="center">
         <template slot-scope="{row}">
           <span>{{ row.category.name }}</span>
@@ -157,6 +177,23 @@
         label-width="70px"
         style="width: 400px; margin-left:50px;"
       >
+        <el-form-item label="商品类型" prop="type">
+          <el-select
+            v-model="temp.type"
+            placeholder="商品类型"
+            clearable
+            class="filter-item"
+            style="width: 130px"
+          >
+            <el-option
+              v-for="item in prodcutTypeOptions"
+              :key="item.key"
+              :label="item.label"
+              :value="item.key"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="商品图片" prop="image">
           <pan-thumb :image="temp.image" />
 
@@ -191,7 +228,7 @@
           <el-input v-model="temp.price" />
         </el-form-item>
 
-        <el-form-item label="分类" prop="price">
+        <el-form-item label="分类" prop="category_id">
           <el-select
             v-model="temp.category_id"
             placeholder="选择分类"
@@ -255,21 +292,17 @@ import Pagination from "@/components/Pagination"; // secondary package based on 
 import { string } from "jszip/lib/support";
 
 const calendarTypeOptions = [];
+const prodcutTypeOptions = [];
 
 export default {
   name: "Product",
   components: { Pagination, ImageCropper, PanThumb },
   directives: { waves },
   filters: {
-    statusFilter(status) {
-      const statusMap = {
-        0: "正常",
-        1: "禁用"
-      };
-      return statusMap[status];
-    },
-    sexFilter(type) {
-      return sexTypeKeyValue[type];
+    typeFilter(type) {
+      if (type === "normal") return "普通商品";
+      if (type === "crowdfunding") return "众筹商品";
+      if (type === "seckill") return "秒杀商品";
     }
   },
   data() {
@@ -286,9 +319,15 @@ export default {
         category_id: "",
         order: "",
         field: "",
-        search: ""
+        search: "",
+        type: ""
       },
       calendarTypeOptions,
+      prodcutTypeOptions: [
+        { label: "普通商品", key: "normal" },
+        { label: "众筹商品", key: "crowdfunding" },
+        { label: "秒杀", key: "seckill" }
+      ],
       sortOptions: [
         { label: "升序", key: "asc" },
         { label: "降序", key: "desc" }
@@ -309,7 +348,9 @@ export default {
         on_sale: "",
         price: 0,
         type: "",
-        skus: []
+        skus: [],
+        seckill: null,
+        crowdfunding: null
       },
       dialogFormVisible: false,
       dialogStatus: "",
@@ -384,8 +425,10 @@ export default {
         long_title: "",
         on_sale: "",
         price: 0,
-        type: "",
-        skus: []
+        skus: [],
+        type: "normal",
+        seckill: null,
+        crowdfunding: null
       };
     },
     handleCreate() {
