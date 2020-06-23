@@ -558,7 +558,7 @@ export default {
           if (tempData.type === "crowdfunding") {
             updateCrowdfunding(this.temp.id, tempData).then(res => {
               const index = this.list.findIndex(v => v.id === this.temp.id);
-              this.list.splice(index, 1, tempData);
+              this.list.splice(index, 1, res.data);
               this.dialogFormVisible = false;
               this.$notify({
                 title: "Success",
@@ -570,7 +570,7 @@ export default {
           } else if (tempData.type === "seckill") {
             updateSeckill(this.temp.id, tempData).then(res => {
               const index = this.list.findIndex(v => v.id === this.temp.id);
-              this.list.splice(index, 1, tempData);
+              this.list.splice(index, 1, res.data);
               this.dialogFormVisible = false;
               this.$notify({
                 title: "Success",
@@ -582,7 +582,7 @@ export default {
           } else {
             updateProduct(this.temp.id, tempData).then(res => {
               const index = this.list.findIndex(v => v.id === this.temp.id);
-              this.list.splice(index, 1, tempData);
+              this.list.splice(index, 1, res.data);
               this.dialogFormVisible = false;
               this.$notify({
                 title: "Success",
